@@ -2,7 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { getKb, type KnowledgeBase } from '@/api/kb'
+import { getKb, refreshKbCounters, type KnowledgeBase } from '@/api/kb'
 import { getTagTree, type TagNode } from '@/api/tag'
 import { generatePaper, listPapers, PAPER_STATUS, type PaperVO } from '@/api/paper'
 import { subscribeTask, type TaskEvent } from '@/api/task'
@@ -62,6 +62,19 @@ async function load() {
   kb.value = kbData
   tagTree.value = tree
   papers.value = paperList
+
+  // 知识库的 docCount / chunkCount 是**冗余计数**，入库完成后由后端重算。
+  // 但历史数据可能因为「重算漏调」而停在 0（这个 bug 真实发生过：
+  // 文档明明解析成功、分块也写进去了，这里却报「还没有解析好的资料」）。
+  // 所以发现计数为 0 时主动让后端重算一次再重新读——自愈，不用人工干预。
+  if (!kbData?.chunkCount) {
+    try {
+      await refreshKbCounters(kbId)
+      kb.value = await getKb(kbId)
+    } catch {
+      // 重算失败就按原值走，submit() 里还会再拦一次并给出提示
+    }
+  }
 }
 
 async function submit() {

@@ -188,7 +188,16 @@ public class KnowledgeBaseService {
                 id, docs, chunks, questionIds.size(), examIds.size(), mistakeIds.size());
     }
 
-    /** 重算冗余计数（文档数 / 分块数 / 知识点数），在入库完成后调用 */
+    /**
+     * 重算知识库的冗余计数：文档数 / 分块数 / 题目数。
+     *
+     * <p>这些字段纯粹是为了让列表页少查几次库，属于**冗余数据**，所以必须有人负责重算。
+     * 之前只在「删除文档」时调用，入库完成后没调用 —— 结果是文档解析成功、分块也写进去了，
+     * 但 {@code bb_knowledge_base.chunk_count} 仍是 0，
+     * 而「AI 出题」页正好拿这个字段做前置校验，就报「这个知识库还没有解析好的资料」。
+     *
+     * <p>调用时机：入库结束（无论成功失败）、删除文档、题目增删。
+     */
     public void refreshCounters(Long kbId) {
         Long docCount = documentMapper.selectCount(
                 Wrappers.<Document>lambdaQuery()
@@ -198,14 +207,23 @@ public class KnowledgeBaseService {
                 Wrappers.<DocChunk>lambdaQuery().eq(DocChunk::getKbId, kbId));
         Long tagCount = tagMapper.selectCount(
                 Wrappers.<Tag>lambdaQuery().eq(Tag::getKbId, kbId));
+        // 题目数统计**全部状态**，不只是「已通过」。
+        // 因为知识库卡片上的「N 题目」是在回答「这个库积累了多少题」——
+        // 用户刚生成 20 道还没审核，卡片显示 0 会让人以为出题失败了。
+        // （文档数用 READY 是因为「解析中/失败」的文档确实还不算可用内容，两者语义不同。）
+        Long questionCount = questionMapper.selectCount(
+                Wrappers.<com.beibei.entity.Question>lambdaQuery()
+                        .eq(com.beibei.entity.Question::getKbId, kbId));
 
         KnowledgeBase patch = new KnowledgeBase();
         patch.setId(kbId);
         patch.setDocCount(docCount.intValue());
         patch.setChunkCount(chunkCount.intValue());
+        patch.setQuestionCount(questionCount.intValue());
         kbMapper.updateById(patch);
 
-        log.debug("知识库 #{} 计数已刷新: 文档={} 分块={} 知识点={}", kbId, docCount, chunkCount, tagCount);
+        log.debug("知识库 #{} 计数已刷新: 文档={} 分块={} 题目={} 知识点={}",
+                kbId, docCount, chunkCount, questionCount, tagCount);
     }
 
     public KbDto.StatVO stat(Long kbId) {

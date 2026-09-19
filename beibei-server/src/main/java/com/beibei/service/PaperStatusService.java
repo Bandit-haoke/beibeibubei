@@ -31,6 +31,7 @@ public class PaperStatusService {
 
     private final PaperMapper paperMapper;
     private final PaperItemMapper paperItemMapper;
+    private final KnowledgeBaseService kbService;
     private final ObjectMapper objectMapper;
 
     /** 出题成功后的收尾 */
@@ -49,6 +50,18 @@ public class PaperStatusService {
         paperMapper.updateById(patch);
 
         recomputeTotals(paperId);
+
+        // 题目是 Python 直接写库的，Java 这边不知道新增了几道，
+        // 所以出题结束后统一重算知识库的「题目数」——否则知识库卡片上一直显示 0 题。
+        if (saved > 0 && paper.getKbId() != null) {
+            try {
+                kbService.refreshCounters(paper.getKbId());
+            } catch (Exception e) {
+                log.warn("刷新知识库 #{} 计数失败（不影响出题结果）：{}",
+                        paper.getKbId(), e.getMessage());
+            }
+        }
+
         log.info("出题收尾：paper=#{} 保存 {} 道，状态={}", paperId, saved,
                 saved > 0 ? "待审" : "失败");
     }

@@ -28,6 +28,7 @@ public class IngestRunner {
     private final AgentStreamClient agentStream;
     private final AsyncTaskService taskService;
     private final DocumentMapper documentMapper;
+    private final KnowledgeBaseService kbService;
     private final ObjectMapper objectMapper;
 
     // ------------------------------------------------------------------
@@ -137,6 +138,13 @@ public class IngestRunner {
                     result.put("degraded", node.path("degraded").asBoolean(false));
                     taskService.success(taskId, result);
 
+                    // ⚠️ 这一行以前是漏的（类注释里写了「并刷新知识库计数」，代码却没做）。
+                    // 后果：文档解析成功、分块也写进去了，但 bb_knowledge_base.chunk_count
+                    // 一直是 0；而「AI 出题」页正好用这个字段做前置校验，
+                    // 于是报「这个知识库还没有解析好的资料，先去上传文档」——
+                    // 明明有 33 个分块却说出不了题。
+                    refreshKbCounters(kbId);
+
                     log.info("入库完成 docId={} 分块={} 知识点={}", docId, chunkCount, tagCount);
                 }
                 case "error" -> {
@@ -144,6 +152,8 @@ public class IngestRunner {
                     String msg = node.path("errorMsg").asText(node.path("error").asText("未知错误"));
                     taskService.fail(taskId, msg);
                     markDocument(docId, Document.STATUS_FAILED, msg);
+                    // 失败也要刷新：这次可能已经写入了一部分分块，计数不能停在旧值上
+                    refreshKbCounters(kbId);
                 }
                 default -> log.debug("忽略未知 SSE 事件: {} -> {}", event.event(), data);
             }
@@ -154,6 +164,21 @@ public class IngestRunner {
 
     private JsonNode read(String data) throws Exception {
         return objectMapper.readTree(data);
+    }
+
+    /**
+     * 重算知识库的冗余计数（文档数 / 分块数）。
+     *
+     * <p>这些计数是**冗余字段**，只为了让列表页和出题页少查几次库。
+     * 冗余就有漂移风险，所以每次入库结束（无论成功失败）都要重算。
+     * 这里刻意吞掉异常：计数不准只是显示问题，不该把入库任务判成失败。
+     */
+    private void refreshKbCounters(long kbId) {
+        try {
+            kbService.refreshCounters(kbId);
+        } catch (Exception e) {
+            log.warn("刷新知识库 #{} 计数失败（不影响入库结果）：{}", kbId, e.getMessage());
+        }
     }
 
     private void markDocument(long docId, int status, String errorMsg) {
