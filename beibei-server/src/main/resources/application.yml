@@ -1,0 +1,103 @@
+server:
+  port: 8080
+  servlet:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+  compression:
+    enabled: true
+    mime-types: application/json,text/html,text/css,application/javascript
+    min-response-size: 2048
+  error:
+    include-message: always
+    include-binding-errors: always
+
+spring:
+  application:
+    name: beibei-server
+  profiles:
+    active: dev
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Shanghai
+    default-property-inclusion: non_null
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 100MB
+      max-request-size: 500MB
+  web:
+    resources:
+      # 前端构建产物放在 classpath:/static/，由本服务托管
+      static-locations: classpath:/static/,classpath:/public/
+      cache:
+        cachecontrol:
+          # ⚠️ 必须显式声明，否则 Spring Boot 一个 Cache-Control 都不发，
+          # 浏览器就会按「启发式缓存」自己决定缓存多久（通常是 Last-Modified 起
+          # 10% 的时间，实测能到 18 分钟）。后果是：前端重新构建、后端重启之后，
+          # 用户的浏览器还在跑旧包，而且**界面不会有任何提示** ——
+          # 排查起来极其费劲（「我明明改好了，你那里怎么没好」）。
+          # no-cache 不是「不缓存」，而是「每次带 If-Modified-Since 回来问一下」，
+          # 没变就回 304，很便宜；变了立刻拿到新的。
+          no-cache: true
+
+# ---------------------------------------------------------------------------
+#  MyBatis-Plus
+# ---------------------------------------------------------------------------
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+  global-config:
+    banner: false
+    db-config:
+      id-type: auto          # 主键统一 bigint auto_increment
+      # 刻意不配 table-prefix：表名在每个实体的 @TableName("bb_xxx") 上显式声明，
+      # 避免「全局前缀 + 注解表名」叠加导致表名错乱
+  mapper-locations: classpath*:/mapper/**/*.xml
+
+# ---------------------------------------------------------------------------
+#  接口文档
+# ---------------------------------------------------------------------------
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+    swagger-model-name: 数据模型
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  level:
+    root: info
+    com.beibei: debug
+  pattern:
+    console: "%d{HH:mm:ss.SSS} | %-5level | %-32logger{32} | %msg%n"
+
+beibei:
+  agent:
+    base-url: http://127.0.0.1:8000
+    # ⚠️ 必须与 beibei-agent/.env 里的 INTERNAL_TOKEN 完全一致
+    internal-token: ${BEIBEI_INTERNAL_TOKEN:change-me-internal-token}
+    timeout-seconds: 120
+  security:
+    # API Key 的 AES 加密口令，必须与 beibei-agent/.env 的 SECRET_KEY 完全一致
+    secret: ${BEIBEI_SECRET_KEY:change-me-secret-key}
+  storage:
+    # 备份文件输出目录
+    backup-dir: D:/beibei-data/backup
+  upload:
+    # 上传文件落 D 盘（E 盘空间紧张）
+    dir: D:/beibei-data/upload
+    max-size-mb: 100
+    allowed-ext: pdf,doc,docx,ppt,pptx,txt,md,xlsx,jpg,jpeg,png,bmp,webp
+  embedding:
+    # ⚠️ 集合名推导规则必须与 beibei-agent/app/config.py 的 chunk_collection 完全一致
+    #    BAAI/bge-m3 → bb_chunk_bge_m3
+    default-model: BAAI/bge-m3
+    collection-prefix: bb_chunk
+    partition-prefix: kb_

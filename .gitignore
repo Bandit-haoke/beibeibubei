@@ -1,0 +1,62 @@
+# ============================================================================
+#  背备不悲 · 根级 .gitignore
+#  各子模块还有自己的 .gitignore（beibei-agent / beibei-server / beibei-web）
+# ============================================================================
+
+# ---------- 绝对不能入库 ----------
+# 真实凭据：内部令牌、AES 口令、数据库口令、各类 API Key
+.env
+.env.local
+*.env
+!.env.example
+application-local.yml
+application-prod.yml
+**/secrets*.yml
+
+# ---------- 构建产物 ----------
+target/
+build/
+dist/
+out/
+*.jar
+*.war
+*.class
+
+# 前端构建产物会被拷进 beibei-server/src/main/resources/static/
+beibei-server/src/main/resources/static/assets/
+beibei-server/src/main/resources/static/index.html
+
+# ---------- 依赖 ----------
+node_modules/
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# ---------- 运行时数据 ----------
+logs/
+*.log
+data/
+uploads/
+temp/
+*.pcm
+*.wav
+*.mp3
+*.webm
+
+# ---------- IDE / 编辑器 ----------
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+.settings/
+.classpath
+.project
+*.swp
+
+# ---------- 系统 ----------
+.DS_Store
+Thumbs.db
+desktop.ini

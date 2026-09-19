@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "composite": true,
+    "skipLibCheck": true,
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    // 这里**不能**写 "noEmit": true：
+    // tsconfig.json 用 references 引用了本文件，而 TS 规定「被引用的 composite 项目
+    // 不允许关闭产出」（TS6310），于是 `npm run build` 里的 `vue-tsc --noEmit` 直接失败。
+    // 改成只产声明文件，并把产物丢进 node_modules，既满足规则又不污染仓库。
+    "declaration": true,
+    "emitDeclarationOnly": true,
+    "outDir": "./node_modules/.tmp/tsconfig-node",
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
+    "types": ["node"]
+  },
+  "include": ["vite.config.ts"]
+}

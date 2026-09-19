@@ -1,0 +1,113 @@
+/* 背备不悲 · 全局基础样式 */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
+    'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  font-size: 14px;
+  color: #1f2937;
+  background: #f4f6fb;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 页面统一标题 */
+.page-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.page-head h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.page-head .sub {
+  font-size: 13px;
+  color: #94a3b8;
+  margin-top: 4px;
+}
+
+.mono {
+  font-family: Consolas, 'Courier New', monospace;
+  font-size: 12.5px;
+}
+
+/* 检查项列表 */
+.check-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.check-row:last-child {
+  border-bottom: none;
+}
+
+.check-row .check-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.check-row .check-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: #1e293b;
+}
+
+.check-row .check-detail {
+  font-size: 13px;
+  color: #64748b;
+  margin-top: 3px;
+  word-break: break-word;
+}
+
+.check-row .check-detail.is-error {
+  color: #dc2626;
+}
+
+.check-row .check-hint {
+  font-size: 12.5px;
+  color: #92400e;
+  background: #fffbeb;
+  border-radius: 6px;
+  padding: 6px 10px;
+  margin-top: 7px;
+}
+
+/* 滚动条 */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}

@@ -1,0 +1,49 @@
+# ===========================================================================
+#  开发环境配置
+#
+#  默认假设：中间件跑在一台局域网主机（虚拟机或另一台机器）的 Docker 里：
+#    MySQL  8.0     :3306   库 beibei
+#    Milvus 2.5+    :19530  （由 beibei-agent 访问，Java 不直连）
+#    Redis  7.0     :6379   （可选，当前未启用）
+#
+#  ⚠️ 下面的地址和口令都是占位符，请按自己的环境改。
+#     也可以不改这里，改用环境变量覆盖：
+#       BEIBEI_DB_URL / BEIBEI_DB_USER / BEIBEI_DB_PASSWORD
+# ===========================================================================
+
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${BEIBEI_DB_URL:jdbc:mysql://192.168.1.100:3306/beibei?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true&rewriteBatchedStatements=true}
+    username: ${BEIBEI_DB_USER:root}
+    password: "${BEIBEI_DB_PASSWORD:your-mysql-password}"
+    hikari:
+      pool-name: BeibeiHikariPool
+      minimum-idle: 2
+      maximum-pool-size: 10
+      connection-timeout: 5000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      # -1 表示永不快速失败：MySQL 没起来时应用仍能启动，前端能看到明确的错误提示，
+      # 便于按 M0 的步骤逐项排障
+      initialization-fail-timeout: -1
+
+# ---------------------------------------------------------------------------
+#  Redis（可选，当前未启用；启用时去掉注释并放开 pom 依赖）
+# ---------------------------------------------------------------------------
+#  data:
+#    redis:
+#      host: 192.168.1.100
+#      port: 6379
+#      database: 5          # 独立 db 编号，避免和虚拟机上其它项目 key 冲突
+#      timeout: 3000ms
+#      lettuce:
+#        pool:
+#          max-active: 8
+#          max-idle: 4
+
+logging:
+  level:
+    com.beibei: debug
+    # 打印 SQL，开发期方便核对表结构
+    com.beibei.mapper: debug
