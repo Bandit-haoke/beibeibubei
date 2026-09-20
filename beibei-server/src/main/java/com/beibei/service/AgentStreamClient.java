@@ -58,6 +58,18 @@ public class AgentStreamClient {
      * @throws IOException 网络异常或 Python 返回非 200
      */
     public void postStream(String path, Object body, Consumer<SseEvent> handler) throws IOException {
+        postStream(path, body, handler, props.timeoutSeconds());
+    }
+
+    /**
+     * 同上，但单独指定超时。
+     *
+     * <p>为什么需要这个重载：全局默认是 120 秒，对一次 LLM 调用足够，
+     * 但面经流水线是「整场面试录音」，光是等待讯飞语音转写出结果就可能十几分钟，
+     * 用 120 秒必然被掐断。这里让长任务自己声明一个够用的超时。
+     */
+    public void postStream(String path, Object body, Consumer<SseEvent> handler,
+                           int timeoutSeconds) throws IOException {
         String json;
         try {
             json = objectMapper.writeValueAsString(body);
@@ -67,7 +79,7 @@ public class AgentStreamClient {
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(props.baseUrl() + path))
-                .timeout(Duration.ofSeconds(props.timeoutSeconds()))
+                .timeout(Duration.ofSeconds(timeoutSeconds))
                 .header("Content-Type", "application/json; charset=utf-8")
                 .header("Accept", "text/event-stream")
                 .header("X-Internal-Token", props.internalToken() == null ? "" : props.internalToken())

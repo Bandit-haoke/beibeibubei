@@ -24,7 +24,7 @@ const chatProviders = computed(() =>
 const VENDOR_LABEL: Record<string, string> = {
   deepseek: 'DeepSeek', qwen: '通义千问', zhipu: '智谱', moonshot: '月之暗面',
   openai: 'OpenAI', claude: 'Claude', ollama: 'Ollama', xfyun: '讯飞',
-  aliyun: '阿里云', local: '本地', mock: 'Mock', custom: '自定义',
+  xfyun_lfasr: '讯飞语音转写', aliyun: '阿里云', local: '本地', mock: 'Mock', custom: '自定义',
 }
 
 const CAP_LABEL: Record<string, string> = {
@@ -62,8 +62,15 @@ const XFYUN_ENDPOINTS = [
 /**
  * 讯飞这类厂商要「三元组」：APPID + APIKey + APISecret。
  * 只给一个 API Key 输入框会让人以为填一个就够了 —— 实际调不通。
+ *
+ * 语音转写（面经用的长音频接口）同样是三件套，所以一并算进 needsTriple。
  */
-const needsTriple = computed(() => form.value.vendor === 'xfyun')
+const needsTriple = computed(
+  () => form.value.vendor === 'xfyun' || form.value.vendor === 'xfyun_lfasr',
+)
+
+/** 只有语音听写需要选端点；语音转写的地址是固定的，选了反而会被改坏 */
+const isIat = computed(() => form.value.vendor === 'xfyun')
 
 function applyPreset(vendor: string) {
   const preset = VENDOR_PRESETS.find((p) => p.vendor === vendor)
@@ -408,7 +415,7 @@ onMounted(async () => {
             <el-radio-button value="custom">自定义</el-radio-button>
           </el-radio-group>
         </el-form-item>
-        <el-form-item v-if="needsTriple" label="服务端点">
+        <el-form-item v-if="isIat" label="服务端点">
           <el-select v-model="form.baseUrl" style="width: 100%">
             <el-option v-for="e in XFYUN_ENDPOINTS" :key="e.value" :value="e.value" :label="e.label" />
           </el-select>

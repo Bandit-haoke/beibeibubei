@@ -90,6 +90,13 @@ const routes: RouteRecordRaw[] = [
     meta: { title: '面试评估报告' },
   },
   {
+    // 面经：上传真实面试录音自动整理成文。入口在「模拟面试」页的第三个 Tab
+    path: '/interview/notes/:id',
+    name: 'interview-note-detail',
+    component: () => import('@/views/InterviewNoteDetailView.vue'),
+    meta: { title: '面经详情' },
+  },
+  {
     path: '/paper',
     name: 'paper',
     component: () => import('@/views/PlaceholderView.vue'),

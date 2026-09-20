@@ -153,6 +153,16 @@ public class AgentClient {
         return postSafe("/api/v1/asr/probe", Map.of("providerId", providerId));
     }
 
+    /**
+     * 探测讯飞【语音转写】能不能用（面经功能依赖它做角色分离）。
+     *
+     * <p>Python 侧只调 prepare，不上传音频、不消耗转写时长，所以点多少次都不会花钱。
+     * 签名也在 Python 那份代码里，Java 不重复实现。
+     */
+    public Map<String, Object> probeLfasr(Long providerId) {
+        return postSafe("/api/v1/interview-note/probe", Map.of("providerId", providerId));
+    }
+
     /** MySQL 分块 ↔ Milvus 向量 一致性校验 */
     public Map<String, Object> consistencyCheck() {
         return getSafe("/api/v1/vectors/consistency");

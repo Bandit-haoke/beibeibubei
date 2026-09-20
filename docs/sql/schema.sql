@@ -565,7 +565,11 @@ CREATE TABLE `bb_interview_turn` (
 SET FOREIGN_KEY_CHECKS = 1;
 
 -- ============================================================================
---  建表完成，共 24 张表
---  下一步：依次执行 init_data.sql（初始配置）、interview.sql（面试 Prompt 模板）
+--  建表完成，本脚本共 24 张表
+--  下一步：按顺序执行
+--    1) init_data.sql      初始配置（Prompt 模板、AI 厂商、任务路由、系统设置）
+--    2) interview.sql      M6 模拟面试：3 张表 + 4 套 Prompt + 模型路由
+--    3) interview_note.sql M7 面经：2 张表 + 4 套 Prompt（切句分角色/口语清洗/成文）
+--  执行完全部脚本后库内共 26 张表。
 --  注意：Milvus collection 由 beibei-agent 启动时自动创建，不在 SQL 里
 -- ============================================================================

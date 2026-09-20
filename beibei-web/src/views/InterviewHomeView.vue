@@ -27,6 +27,7 @@ import {
 } from '@/api/interview'
 import { listKb, type KnowledgeBase } from '@/api/kb'
 import { subscribeTask } from '@/api/task'
+import InterviewNotePanel from '@/components/InterviewNotePanel.vue'
 
 const router = useRouter()
 const activeTab = ref('resume')
@@ -361,6 +362,14 @@ onUnmounted(() => unsubscribe?.())
             </template>
           </el-table-column>
         </el-table>
+      </el-tab-pane>
+
+      <!-- ============ 面经（上传真实面试录音，AI 整理成文）============ -->
+      <el-tab-pane name="note">
+        <template #label>
+          <span>面经</span>
+        </template>
+        <InterviewNotePanel />
       </el-tab-pane>
     </el-tabs>
 

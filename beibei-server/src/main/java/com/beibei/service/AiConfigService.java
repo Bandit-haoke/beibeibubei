@@ -297,6 +297,32 @@ public class AiConfigService {
      * 填错任何一个只有握手才知道 —— 检查「字段非空」毫无意义。
      */
     private AiDto.TestResultVO testAsr(AiProvider provider) {
+        String vendor = provider.getVendor() == null ? "" : provider.getVendor().toLowerCase();
+
+        // 语音转写（面经用它做角色分离）：地址与协议都不同，走单独的探测接口
+        if ("xfyun_lfasr".equals(vendor)) {
+            long startedLfasr = System.currentTimeMillis();
+            Map<String, Object> body = agentClient.probeLfasr(provider.getId());
+            boolean ok = Boolean.TRUE.equals(body.get("ok"));
+            int latency = body.get("latencyMs") instanceof Number n
+                    ? n.intValue() : (int) (System.currentTimeMillis() - startedLfasr);
+            String endpoint = String.valueOf(body.getOrDefault("endpoint", provider.getBaseUrl()));
+
+            String message;
+            if (ok) {
+                message = "语音转写可用（" + latency + " ms）—— "
+                        + body.getOrDefault("message", "角色分离已开启");
+            } else {
+                message = String.valueOf(body.getOrDefault("error", "探测失败"));
+                Object hint = body.get("hint");
+                if (hint != null && !String.valueOf(hint).isBlank()) {
+                    message = message + " —— " + hint;
+                }
+            }
+            markTest(provider.getId(), ok, message);
+            return new AiDto.TestResultVO(ok, message, latency, provider.getModel(), endpoint);
+        }
+
         if (!"xfyun".equalsIgnoreCase(provider.getVendor())) {
             String msg = "暂时只支持自动测试讯飞语音听写；"
                     + "「" + provider.getVendor() + "」请录音实测，或用打字作答";

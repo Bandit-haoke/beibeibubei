@@ -69,6 +69,10 @@ export const VENDOR_PRESETS = [
   { vendor: 'openai', name: 'OpenAI', protocol: 'openai-compatible', baseUrl: 'https://api.openai.com', model: 'gpt-4o-mini', capability: 'CHAT' },
   { vendor: 'ollama', name: '本地 Ollama', protocol: 'ollama', baseUrl: 'http://127.0.0.1:11434', model: 'qwen2.5:7b', capability: 'CHAT' },
   { vendor: 'xfyun', name: '讯飞语音听写', protocol: 'custom', baseUrl: 'wss://iat-api.xfyun.cn/v2/iat', model: 'iat', capability: 'ASR' },
+  // 面经功能要用：语音听写是短音频实时接口，没有说话人分离能力。
+  // 想让「面试官/我」分得准，需要单独配这条「语音转写」——
+  // 讯飞每个服务的 APIKey/APISecret 是各自独立的，不能复用语音听写那把。
+  { vendor: 'xfyun_lfasr', name: '讯飞语音转写（长音频·角色分离）', protocol: 'custom', baseUrl: 'https://raasr.xfyun.cn/api', model: 'lfasr', capability: 'ASR' },
   { vendor: 'aliyun', name: '阿里云智能语音', protocol: 'custom', baseUrl: 'https://nls-gateway-cn-shanghai.aliyuncs.com', model: 'nls', capability: 'ASR' },
 ]
 

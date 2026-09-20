@@ -43,6 +43,8 @@ public class AsyncTask implements Serializable {
     public static final String TYPE_RESTORE = "RESTORE";
     /** 简历解析（模拟面试模块） */
     public static final String TYPE_RESUME_PARSE = "RESUME_PARSE";
+    /** 面经生成（录音转写 → 分角色 → 清洗 → 成文） */
+    public static final String TYPE_INTERVIEW_NOTE = "INTERVIEW_NOTE";
 
     @TableId(type = IdType.AUTO)
     private Long id;

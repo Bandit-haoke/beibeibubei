@@ -55,6 +55,32 @@ public class FileStorageService {
      * @param kbId 知识库 ID，用于分目录
      */
     public StoredFile store(Long kbId, MultipartFile file) {
+        return storeInto(String.valueOf(kbId), file, props.allowedExtArray(),
+                props.maxSizeMb(), "不支持的文件类型", props.allowedExt());
+    }
+
+    /** 面经录音的体积上限：500MB，与讯飞语音转写的单文件上限对齐 */
+    public static final long AUDIO_MAX_SIZE_MB = 500L;
+
+    /** 音频格式白名单，和学习资料的白名单刻意分开 */
+    private static final String[] AUDIO_EXTS = {
+            "mp3", "wav", "m4a", "flac", "opus", "aac", "ogg", "wma", "amr"
+    };
+
+    /**
+     * 面经录音落盘。
+     *
+     * <p>单独开一个入口，而不是把音频格式加进 {@code beibei.upload.allowed-ext}：
+     * 那样用户就能把 mp3 当"学习资料"传进知识库，然后在解析阶段才失败，提示很绕。
+     * 这里用独立目录 {@code audio/} + 独立白名单 + 独立体积上限。
+     */
+    public StoredFile storeAudio(MultipartFile file) {
+        return storeInto("audio", file, AUDIO_EXTS, AUDIO_MAX_SIZE_MB,
+                "不支持的音频格式", String.join(",", AUDIO_EXTS));
+    }
+
+    private StoredFile storeInto(String dirName, MultipartFile file, String[] allowedExts,
+                                 long maxSizeMb, String typeErrorPrefix, String allowedDesc) {
         if (file == null || file.isEmpty()) {
             throw BusinessException.invalid("上传文件为空");
         }
@@ -64,26 +90,26 @@ public class FileStorageService {
 
         // 扩展名校验
         boolean allowed = false;
-        for (String e : props.allowedExtArray()) {
+        for (String e : allowedExts) {
             if (e.equals(ext)) {
                 allowed = true;
                 break;
             }
         }
         if (!allowed) {
-            throw BusinessException.invalid("不支持的文件类型 ." + ext + "，允许：" + props.allowedExt());
+            throw BusinessException.invalid(typeErrorPrefix + " ." + ext + "，允许：" + allowedDesc);
         }
 
         // 体积校验（Spring 的 multipart 限制之外再兜一层，给出更友好的错误）
-        long maxBytes = props.maxSizeMb() * 1024 * 1024;
+        long maxBytes = maxSizeMb * 1024 * 1024;
         if (file.getSize() > maxBytes) {
             throw BusinessException.invalid(
-                    "文件 " + originalName + " 超过 " + props.maxSizeMb() + " MB 限制");
+                    "文件 " + originalName + " 超过 " + maxSizeMb + " MB 限制");
         }
 
         String month = LocalDate.now().toString().substring(0, 7).replace("-", "");
         String fileName = UUID.randomUUID().toString().replace("-", "") + "." + ext;
-        Path dir = Paths.get(props.dir(), String.valueOf(kbId), month);
+        Path dir = Paths.get(props.dir(), dirName, month);
         Path target = dir.resolve(fileName);
 
         try {
@@ -96,7 +122,7 @@ public class FileStorageService {
             }
             String sha256 = HexFormat.of().formatHex(digest.digest());
 
-            String relative = Paths.get(String.valueOf(kbId), month, fileName).toString().replace('\\', '/');
+            String relative = Paths.get(dirName, month, fileName).toString().replace('\\', '/');
             log.info("文件已落盘: {} -> {} ({} bytes, sha256={})",
                     originalName, target, file.getSize(), sha256.substring(0, 12));
 

@@ -220,7 +220,8 @@ SELECT * FROM (
 ) AS t WHERE NOT EXISTS (SELECT 1 FROM `bb_model_route` WHERE `task_type` = 'INTERVIEW_REPORT');
 
 -- ============================================================================
---  完成。新增 3 张表，库内共 24 张表。
+--  完成。本脚本新增 3 张表（M6 完成时库内共 24 张表）。
+--  后续 M7 面经模块的 docs/sql/interview_note.sql 会再加 2 张，最终 26 张。
 --
 --  ⚠️ Prompt 模板内容以 interview_prompt_v2.sql 为准 —— 真实跑过大模型之后，
 --     这三个模板（RESUME_PARSE / INTERVIEW_ASK / INTERVIEW_REPORT）做了修正，

@@ -77,6 +77,8 @@ EXPECTED_TABLES = [
     "bb_prompt_template", "bb_ai_call_log", "bb_async_task", "bb_setting",
     # M6 模拟面试（docs/sql/interview.sql）
     "bb_resume", "bb_interview", "bb_interview_turn",
+    # M7 面经（docs/sql/interview_note.sql）
+    "bb_interview_note", "bb_interview_note_turn",
 ]
 
 

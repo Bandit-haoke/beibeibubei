@@ -148,19 +148,29 @@ def resolve_xfyun_credentials() -> XfyunCredentials:
       3. .env 的 XFYUN_*（兜底，也是最早期的路径）
 
     前两层只要缺任何一个值就继续往下找 —— 半个三元组是没法用的。
+
+    ⚠️ 必须排除「讯飞语音转写（LFASR）」那条配置：
+    它同样挂在 ASR 能力下（面经要用），但走的是另一套 HTTP 接口（raasr.xfyun.cn）、
+    另一套密钥。如果不排除，用户一旦新增了语音转写配置，这里的选路就可能挑中它，
+    表现为**语音输入突然不可用** —— 而且是"配了反而坏了"，非常难理解。
+    它只由 app/services/interview_note.py 的 resolve_lfasr_credentials() 使用。
     """
     settings = get_settings()
+
+    # 讯飞语音转写专用配置的识别条件（vendor 标记或 base_url 含 raasr）
+    not_lfasr = ("AND LOWER(COALESCE(p.vendor, '')) <> 'xfyun_lfasr' "
+                 "AND COALESCE(p.base_url, '') NOT LIKE '%raasr%' ")
 
     queries = (
         # 1) 任务路由指定的 ASR 厂商
         ("SELECT p.name, p.app_id, p.api_key_enc, p.api_secret_enc, p.base_url "
          "FROM bb_ai_provider p JOIN bb_model_route r ON r.provider_id = p.id "
-         "WHERE r.task_type = 'ASR' AND p.enabled = 1 LIMIT 1"),
+         "WHERE r.task_type = 'ASR' AND p.enabled = 1 " + not_lfasr + "LIMIT 1"),
         # 2) 任何启用的 ASR 厂商
         ("SELECT p.name, p.app_id, p.api_key_enc, p.api_secret_enc, p.base_url "
          "FROM bb_ai_provider p "
          "WHERE p.enabled = 1 AND p.capability LIKE '%ASR%' "
-         "  AND COALESCE(p.locked, 0) = 0 "
+         "  AND COALESCE(p.locked, 0) = 0 " + not_lfasr +
          "ORDER BY p.priority ASC LIMIT 1"),
     )
 

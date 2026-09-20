@@ -8,6 +8,11 @@ AI 按要点判分并溯源 → 错题按艾宾浩斯曲线复习。
 **外加一件事**：让 AI 拿你的简历来面试你——多轮追问、五维打分、出评估报告，
 最后把报告里的薄弱知识点变成一张专项题卷，回到学习模块接着刷。
 
+**还有一件**：把**真实面试的录音**传进去，自动区分「面试官 / 我」两个角色、
+清掉「啊、额、嗯」这类语气词与重复，整理成一篇面经（问题清单 + 回答要点 + 复盘建议）。
+没有说话人分离也能用：优先走讯飞语音转写的原生角色分离，未开通时自动降级为
+语音听写 + 大模型切句判角色。
+
 <sub>仓库：<https://github.com/Bandit-haoke/beibeibubei> · 反馈：wen_jie_you@163.com</sub>
 
 [功能全景](docs/功能介绍.md) · [部署文档](docs/部署文档.md) · [设计文档](docs/01-设计文档.md) · [踩坑记录](docs/05-进度与验证记录.md)
@@ -52,11 +57,11 @@ AI 按要点判分并溯源 → 错题按艾宾浩斯曲线复习。
 | 网关 | Spring Boot 3.3 · Java 21 · MyBatis-Plus · Knife4j |
 | 智能体 | FastAPI · Python 3.11 · SQLAlchemy 2.0 · pymilvus |
 | 向量库 | Milvus 2.5（稠密 + 原生 BM25 稀疏，RRF 混合检索） |
-| 业务库 | MySQL 8.0（24 张表） |
+| 业务库 | MySQL 8.0（26 张表） |
 | Embedding | BGE-M3（本地推理，1024 维） |
 | OCR | PaddleOCR（本地推理） |
 | 大模型 | 任意 OpenAI 兼容 API（DeepSeek / 通义 / 智谱 / Kimi / OpenAI / Ollama） |
-| 语音识别 | 讯飞语音听写（流式版） |
+| 语音识别 | 讯飞语音听写（实时短音频）· 讯飞语音转写（长音频 + 角色分离，面经用，可选） |
 
 **架构约定**：浏览器只跟 Java 说话，Python 只在内网被 Java 调用，
 鉴权与错误兜底只做一遍。前端构建产物由 Java 托管在同一端口，不存在跨域。
@@ -68,9 +73,10 @@ AI 按要点判分并溯源 → 错题按艾宾浩斯曲线复习。
 ```bash
 # 0. 前置：MySQL 8 + Milvus 2.5（用 Docker 起，见部署文档第 2 节）
 
-# 1. 建库（24 张表 + 初始配置）
+# 1. 建库（26 张表 + 初始配置）
 python scripts/apply_sql.py docs/sql/schema.sql docs/sql/init_data.sql \
-                            docs/sql/interview.sql docs/sql/interview_prompt_v2.sql
+                            docs/sql/interview.sql docs/sql/interview_prompt_v2.sql \
+                            docs/sql/interview_note.sql
 
 # 2. Python 环境
 conda create -n beibei python=3.11 -y && conda activate beibei
@@ -192,7 +198,7 @@ AI 抽最多 3 层知识点树，分块自动打标（宁少勿滥），知识�
 ├── beibei-web/             Vue 前端，构建产物输出到 server 的 static/
 ├── docs/
 │   ├── 01-设计文档.md       产品定位、架构、功能清单、硬性约束
-│   ├── 02-数据库设计.md     24 张表 + Milvus 集合设计
+│   ├── 02-数据库设计.md     26 张表 + Milvus 集合设计
 │   ├── 03-接口设计.md       Java 对外 API、Python 内部 API、SSE 协议
 │   ├── 04-环境与部署.md     中间件配置要点、Milvus 自启、LLM_MOCK 开关
 │   ├── 05-进度与验证记录.md  每个里程碑的实测证据 + 几十条踩坑记录

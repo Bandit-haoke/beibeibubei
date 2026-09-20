@@ -10,6 +10,7 @@ from app.api.v1 import (
     health,
     ingest,
     interview,
+    interview_note,
     question,
     search,
     tags,
@@ -26,3 +27,4 @@ api_router.include_router(question.router)
 api_router.include_router(grade.router)
 api_router.include_router(asr.router)
 api_router.include_router(interview.router)
+api_router.include_router(interview_note.router)
